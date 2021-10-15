@@ -154,19 +154,14 @@ public:
     Display();
 
     void begin();
-
     void printImage(const uint8_t bitmap[], const short width, const short height);
-
     void setNumberScenes(int totalScenes);
-
     void setScenesTitles(String titles[]);
-
     void setScenesSuffix(String suffix[]);
-
     void printCurrentScene(String scenesValues[], bool showTitle);
     void printBasicInfo(bool isWifiConnected, short batteryLevelPercent);
-
     void clearPixels(uint16_t startY, uint16_t stopY = SCREEN_WIDTH);
+    void resetDisplay();
 
 private:
 

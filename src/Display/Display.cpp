@@ -98,6 +98,10 @@ void Display::printBasicInfo(bool isWifiConnected, short batteryLevelPercent) {
     this->display->drawFastHLine(0, h + 2, SCREEN_WIDTH, SSD1306_WHITE);
 }
 
+void Display::resetDisplay() {
+    this->clearPixels(0, SCREEN_HEIGHT);
+}
+
 void Display::clearPixels(uint16_t startY, uint16_t stopY) {
     for (; startY < stopY; startY++) {
         for (uint16_t x = 0; x < SCREEN_WIDTH; x++) {
@@ -107,7 +111,7 @@ void Display::clearPixels(uint16_t startY, uint16_t stopY) {
 }
 
 void Display::drawBatteryIndicator(short percent) {
-    if (percent >= 100) percent = 99;
+    if (percent >= 100) percent = 100;
     if (percent < 0) percent = 0;
 
     short numColumns = percent * 4 / 75;
@@ -120,6 +124,10 @@ void Display::drawBatteryIndicator(short percent) {
         display->fillRect(startX, 2, 4, 4, SSD1306_WHITE);
 
     display->setCursor(32, 0);
-    display->println(String(percent) + "%");
+
+    if (percent < 100)
+        display->println(String(percent) + "%");
+    else
+        display->println("OK");
 }
 
