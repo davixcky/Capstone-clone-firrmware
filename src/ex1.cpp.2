@@ -1,0 +1,28 @@
+#include <Arduino.h>
+#include <DHT.h>
+
+#include "Sensors/Sensors.h"
+
+#define DHTPIN 32
+#define DHTTYPE DHT11
+
+Sensors sensors(DHTPIN);
+
+void setup() {
+    Serial.begin(115200);
+    Serial.println(F("DHTxx test!"));
+
+    sensors.begin();
+}
+
+void loop() {
+    delay(2000);
+
+    sensors.calculateSensorsValues();
+
+    Serial.print(F("Humedad: "));
+    Serial.print(sensors.getCurrentHumidity());
+    Serial.print(F("% Temperatura: "));
+    Serial.print(sensors.getCurrentTemperature());
+    Serial.println(F("°C "));
+}

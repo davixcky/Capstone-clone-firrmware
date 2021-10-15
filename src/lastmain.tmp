@@ -1,0 +1,193 @@
+#include <Arduino.h>
+#include <WiFi.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include "FS.h"
+#include "SD.h"
+#include "SPI.h"
+#include <AsyncJson.h>
+#include <ArduinoJson.h>
+#include <DNSServer.h>
+
+#include "globals.h"
+// Create AsyncWebServer object on port 80
+AsyncWebServer server(80);
+DNSServer dnsServer;
+
+void initSDCard() {
+    if (!SD.begin()) {
+        Serial.println("Card Mount Failed");
+        return;
+    }
+    uint8_t cardType = SD.cardType();
+
+    if (cardType == CARD_NONE) {
+        Serial.println("No SD card attached");
+        return;
+    }
+
+    Serial.print("SD Card Type: ");
+    if (cardType == CARD_MMC) {
+        Serial.println("MMC");
+    } else if (cardType == CARD_SD) {
+        Serial.println("SDSC");
+    } else if (cardType == CARD_SDHC) {
+        Serial.println("SDHC");
+    } else {
+        Serial.println("UNKNOWN");
+    }
+    uint64_t cardSize = SD.cardSize() / (1024 * 1024);
+    Serial.printf("SD Card Size: %lluMB\n", cardSize);
+}
+
+void initWiFi() {
+    WiFi.mode(WIFI_AP_STA);
+    WiFi.softAP(AP_SSID);
+
+    IPAddress IP = WiFi.softAPIP();
+    Serial.print("AP IP address: ");
+    Serial.println(IP);
+}
+
+String _networkList;
+
+void calculatNetworkList() {
+    StaticJsonDocument<1024> json;
+    JsonArray networks = json.createNestedArray("networks");
+
+    int n = WiFi.scanNetworks();
+    for (int i = 0; i < n; ++i) {
+        JsonObject network = networks.createNestedObject();
+        network["SSID"] = WiFi.SSID(i);
+        // network["RSSI"] = WiFi.RSSI(i);
+        // network["encryption_type"] = (WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? " " : "*";
+        delay(10);
+    }
+
+    Serial.println("calculating list");
+    Serial.println(_networkList);
+
+    serializeJson(json, _networkList);
+}
+
+void onGetNetworks(AsyncWebServerRequest *request) {
+    if (request->hasParam("force"))
+        calculatNetworkList();
+
+    Serial.println("responding list");
+    Serial.println(_networkList);
+
+    Serial.println(request->client()->remoteIP());
+
+    request->send(200, "application/json", _networkList);
+}
+
+void onSaveConfiguration(AsyncWebServerRequest *request) {
+    AsyncWebParameter *ssid = request->getParam("ssid");
+    AsyncWebParameter *password = request->getParam("password");
+    AsyncWebParameter *device_name = request->getParam("device_name");
+
+    if (!ssid || !password || !device_name) {
+        request->send(400, "application/json", "{\"error\":\"some of the fields are empty\"}");
+        return;
+    }
+
+    Serial.print("Connecting ...");
+    WiFi.begin(ssid->value().c_str(), password->value().c_str());
+    uint32_t t1 = millis();
+    bool wifi_timeout = false;
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(2000);
+        Serial.print(".");
+        if (millis() - t1 > 50000) //50 seconds elapsed connecting to WiFi
+        {
+            Serial.println();
+            Serial.println("Timeout connecting to WiFi. The SSID and Password seem incorrect.");
+            wifi_timeout = true;
+            break;
+        }
+    }
+
+    Serial.println(WiFi.status() != WL_CONNECT_FAILED);
+
+    if (!wifi_timeout) {
+        Serial.println("connected");
+        Serial.println(WiFi.localIP());
+        request->send(200, "application/json", "{\"status\":\"Credentials were uploaded successfully\"}");
+        WiFi.softAPdisconnect(true);
+        return;
+    }
+
+    request->send(400, "application/json", "{\"error\":\"credentials were incorrect\"}");
+}
+
+
+class CaptiveRequestHandler : public AsyncWebHandler {
+public:
+    CaptiveRequestHandler() {}
+
+    virtual ~CaptiveRequestHandler() {}
+
+    bool canHandle(AsyncWebServerRequest *request) {
+        return true;
+    }
+
+    void handleRequest(AsyncWebServerRequest *request) {
+        request->send_P(200, "text/html", configuration_page_html);
+    }
+};
+
+void setup() {
+    Serial.begin(115200);
+    initWiFi();
+    initSDCard();
+
+    calculatNetworkList();
+
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+                request->send_P(200, "text/html", configuration_page_html);
+    /*
+     * Use it if you want to send a gzip page instead of a PROGMEM html
+     * AsyncWebServerResponse *response = request->beginResponse(SD, "/public/index.html", "text/html")
+     * response->addHeader("Content-Encoding", "gzip");
+     * request->send(response);
+     */
+            })
+            .setFilter(ON_AP_FILTER);
+
+    server.on("/bye", HTTP_GET, [](AsyncWebServerRequest *request) {
+        AsyncWebServerResponse *response = request->beginResponse(200, "Turning off", "text/plain");
+        request->send(response);
+
+        server.end();
+        WiFi.softAPdisconnect(true);
+    });
+
+    server.onNotFound([](AsyncWebServerRequest *request) {
+        AsyncWebServerResponse *response = request->beginResponse(SD, "/public/index.html", "text/html");
+        response->addHeader("Content-Encoding", "gzip");
+        request->send(response);
+    });
+
+    server.on("/api/networks", HTTP_GET, onGetNetworks);
+    server.on("/api/configuration", HTTP_POST, onSaveConfiguration);
+
+    server.serveStatic("/public", SD, "/public");
+    server.serveStatic("/", SD, "/public");
+
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+    DefaultHeaders::Instance().addHeader("Access-Control-Max-Age", "600");
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "PUT,POST,GET,OPTIONS");
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "*");
+
+    dnsServer.start(53, "*", WiFi.softAPIP());
+    server.addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER);
+
+    server.begin();
+
+    Serial.println("server started");
+}
+
+void loop() {
+    dnsServer.processNextRequest();
+}
