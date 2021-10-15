@@ -31,23 +31,19 @@ void Storage::loadConfig() {
      *  2nd line: wifi_password
      * */
 
-    // strncpy(_wifi_ssid, "\0", MAX_CHARACTERS_CONF_LINE);
-    // strncpy(_wifi_password, "\0", MAX_CHARACTERS_CONF_LINE);
+    strncpy(_wifi_ssid, "\0", MAX_CHARACTERS_CONF_LINE);
+    strncpy(_wifi_password, "\0", MAX_CHARACTERS_CONF_LINE);
     _wifi_ssid_length = _wifi_password_length = 0;
 
-    if (file.available()) {
+    if (file.available())
         _wifi_ssid_length = file.readBytesUntil('\n', _wifi_ssid, MAX_CHARACTERS_CONF_LINE);
-        Serial.println(F(_wifi_ssid));
-        Serial.println(F(_wifi_ssid_length));
-    }
 
-    if (file.available()) {
-        _wifi_ssid_length = file.readBytesUntil('\n', _wifi_password, MAX_CHARACTERS_CONF_LINE);
-        Serial.println(F(_wifi_password));
-        Serial.println(F(_wifi_password_length));
-    }
+    if (file.available())
+        _wifi_password_length = file.readBytesUntil('\n', _wifi_password, MAX_CHARACTERS_CONF_LINE);
+
 
     _isWifiSet = _wifi_ssid_length && _wifi_password_length;
+    printCurrentCredentials();
 
     file.close();
 }
@@ -62,7 +58,7 @@ void Storage::setNewCredentials(const char *ssid, const char *password) {
 }
 
 void Storage::printCurrentCredentials() {
-    Serial.println(F("Wifi credentials:"));
+    Serial.println(F("Current wifi credentials set:"));
     Serial.println(F(_wifi_ssid));
     Serial.println(F(_wifi_password));
 }
@@ -75,7 +71,7 @@ void Storage::saveWifiCredentials() {
     SD.remove(CONFIGURATION_PATH);
 
     File file = SD.open(CONFIGURATION_PATH, FILE_APPEND);
-    if(!file) {
+    if (!file) {
         Serial.println("Failed to open file for writing");
         return;
     }
