@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <DHT.h>
+#include <Display/Display.h>
 
 #include "Sensors/Sensors.h"
 
@@ -7,22 +8,39 @@
 #define DHTTYPE DHT11
 
 Sensors sensors(DHTPIN);
+Display display;
 
+String suffix[] = {"T", "H"};
+String titles[] = {"Temperature", "Humidity"};
 void setup() {
     Serial.begin(115200);
     Serial.println(F("DHTxx test!"));
 
     sensors.begin();
+    display.begin();
+
+    display.setScenesSuffix(suffix);
+    display.setScenesTitles(titles);
+    display.setNumberScenes(2);
+
+    delay(2000);
+    display.resetDisplay();
 }
 
+short battery = 0;
 void loop() {
-    delay(2000);
-
     sensors.calculateSensorsValues();
+    String scenes[] = {sensors.getCurrentTemperature(), sensors.getCurrentHumidity()};
 
     Serial.print(F("Humedad: "));
-    Serial.print(sensors.getCurrentHumidity());
+    Serial.print(scenes[1]);
     Serial.print(F("% Temperatura: "));
-    Serial.print(sensors.getCurrentTemperature());
+    Serial.print(scenes[0]);
     Serial.println(F("°C "));
+
+    display.printBasicInfo(false, battery);
+    display.printCurrentScene(scenes, false);
+    delay(2000);
+
+    battery += 3;
 }
