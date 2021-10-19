@@ -15,7 +15,6 @@ public:
     }
 };
 
-
 ServerManager::ServerManager() {
 //    this->server = new AsyncWebServer(80);
 }
@@ -42,6 +41,31 @@ void ServerManager::begin() {
 
     server->begin();
     Serial.println("ServerManager started");
+}
+
+void ServerManager::connectToWifi(const char *ssid, const char *password) {
+    _isConnected = false;
+    _keepTrying = true;
+
+    WiFi.mode(WIFI_MODE_STA);
+    WiFi.begin(ssid, password);
+
+    WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info) {
+        _keepTrying = false;
+    }, SYSTEM_EVENT_STA_DISCONNECTED);
+
+    while (WiFi.status() != WL_CONNECTED && _keepTrying) {
+        delay(1000);
+    }
+
+    if (WiFi.status() != WL_CONNECTED || !_keepTrying) {
+        return;
+    }
+
+    _isConnected = true;
+    strncpy(_localIp, WiFi.localIP().toString().c_str(), 30);
+
+    Serial.println(_localIp);
 }
 
 void onSaveConfiguration(AsyncWebServerRequest *request) {
@@ -90,8 +114,6 @@ void ServerManager::launchCaptivePortal() {
     }
 
     server = new AsyncWebServer(80);
-    server->serveStatic("/public", SD, "/public");
-    server->serveStatic("/", SD, "/public");
 
     WiFi.mode(WIFI_MODE_AP);
     WiFi.softAP(AP_SSID, AP_PASSWORD);
@@ -144,13 +166,20 @@ void ServerManager::launchCaptivePortal() {
         request->send(200, "application/json", json);
     });
 
+    server->serveStatic("/public", SD, "/public");
+    server->serveStatic("/", SD, "/public");
 
     server->on("/api/configuration", HTTP_POST, onSaveConfiguration);
-
 
     // Setup dns
     dnsServer.start(53, "*", WiFi.softAPIP());
     server->addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER);
+
+    // Setup cors headers
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+    DefaultHeaders::Instance().addHeader("Access-Control-Max-Age", "600");
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "PUT,POST,GET,OPTIONS");
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "*");
 
     server->begin();
     Serial.println("server started");
