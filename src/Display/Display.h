@@ -159,9 +159,10 @@ public:
     void setScenesTitles(String titles[]);
     void setScenesSuffix(String suffix[]);
     void printCurrentScene(String scenesValues[], bool showTitle);
-    void printBasicInfo(bool isWifiConnected, short batteryLevelPercent);
     void clearPixels(uint16_t startY, uint16_t stopY = SCREEN_WIDTH);
-    void resetDisplay();
+    void applyChanges();
+    void printBasicInfo(const char *text, short batteryLevelPercent);
+    void printScene(char *sceneValue, uint8_t length);
 
 private:
 
@@ -170,9 +171,9 @@ private:
     int currentIndexScene;
     String *titlesScenes = nullptr;
     String *suffixesScenes = nullptr;
+    char previousScene[30];
 
     void drawBatteryIndicator(short percent);
-
 };
 
 #endif // DISPLAY__H

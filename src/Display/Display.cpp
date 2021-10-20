@@ -1,6 +1,8 @@
 #include "Display.h"
 
 Display::Display() {
+    previousScene[0] = 0; // Initialize the array to null char
+
     this->display = new Adafruit_SSD1306(
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
@@ -40,6 +42,35 @@ void Display::setNumberScenes(int totalScenes) {
     this->currentIndexScene = 0;
 }
 
+void Display::printScene(char *sceneValue, uint8_t length) {
+    if (!this->display) {
+        Serial.println("Display has not been created");
+        return;
+    }
+
+    if (strncmp(previousScene, sceneValue, 30) == 0) {
+        return;
+    }
+
+    strncpy(previousScene, sceneValue, 30);
+
+    this->clearPixels(12);
+    this->display->setCursor(8, 15);
+    this->display->setTextColor(SSD1306_WHITE);
+    this->display->setTextSize(2);
+
+    uint8_t i = 0;
+    uint8_t stop = length > 10 ? 7 : 10;
+    for (; i < stop && sceneValue[i] != '\0'; i++) {
+        this->display->write(sceneValue[i]);
+
+    }
+
+    if (i == stop) {
+        this->display->println(F("..."));
+    }
+}
+
 void Display::printCurrentScene(String *scenesValues, bool showTitle = true) {
     if (!this->display) {
         Serial.println("Display has not been created");
@@ -65,8 +96,6 @@ void Display::printCurrentScene(String *scenesValues, bool showTitle = true) {
     if (++this->currentIndexScene >= this->maxScenes) {
         this->currentIndexScene = 0;
     }
-
-    this->display->display();
 }
 
 void Display::setScenesTitles(String *titles) {
@@ -78,28 +107,26 @@ void Display::setScenesSuffix(String *suffixes) {
     this->suffixesScenes = suffixes;
 }
 
-void Display::printBasicInfo(bool isWifiConnected, short batteryLevelPercent) {
+void Display::printBasicInfo(const char *text, short batteryLevelPercent) {
     int16_t x, y;
     uint16_t w, h;
-
-    String statusText = isWifiConnected ? "Connected" : "Disconnected";
 
     this->clearPixels(0, 9);
     this->display->setTextColor(SSD1306_WHITE, SSD1306_BLACK);
 
     this->display->setTextSize(1);
-    this->display->getTextBounds(statusText, 0, 0, &x, &y, &w, &h);
+    this->display->getTextBounds(text, 0, 0, &x, &y, &w, &h);
 
     this->display->setCursor(SCREEN_WIDTH - w - 1, 0);
-    this->display->println(statusText);
+    this->display->println(text);
 
     this->drawBatteryIndicator(batteryLevelPercent);
 
     this->display->drawFastHLine(0, h + 2, SCREEN_WIDTH, SSD1306_WHITE);
 }
 
-void Display::resetDisplay() {
-    this->clearPixels(0, SCREEN_HEIGHT);
+void Display::applyChanges() {
+    this->display->display();
 }
 
 void Display::clearPixels(uint16_t startY, uint16_t stopY) {
