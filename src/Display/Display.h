@@ -164,8 +164,12 @@ public:
     void printBasicInfo(const char *text, short batteryLevelPercent);
     void printScene(char *sceneValue, uint8_t length);
 
-private:
+    static Display &Instance() {
+        static Display instance;
+        return instance;
+    }
 
+private:
     Adafruit_SSD1306 *display = nullptr;
     int maxScenes;
     int currentIndexScene;

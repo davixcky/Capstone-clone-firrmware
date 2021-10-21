@@ -5,21 +5,20 @@
 #include "Storage/Storage.h"
 #include "Display/Display.h"
 
-Display display;
 char scenesBuffer[30] = "Setting up";
 uint8_t lengthBuffer = strlen(scenesBuffer);
 void setup() {
     Serial.begin(115200);
 
-    display.begin();
-    display.setNumberScenes(1);
+    Display::Instance().begin();
+    Display::Instance().setNumberScenes(1);
 
     Storage::init();
 
     ServerManager::Instance().launchCaptivePortal();
 
     delay(3000);
-    display.clearPixels(0, SCREEN_HEIGHT);
+    Display::Instance().clearPixels(0, SCREEN_HEIGHT);
 }
 
 void loop() {
@@ -33,8 +32,8 @@ void loop() {
         ServerManager::Instance().tick();
     }
 
-    display.printBasicInfo(ServerManager::Instance().getCurrentIP(), 80);
-    display.printScene(scenesBuffer, lengthBuffer);
+    Display::Instance().printBasicInfo(ServerManager::Instance().getCurrentIP(), 80);
+    Display::Instance().printScene(scenesBuffer, lengthBuffer);
 
-    display.applyChanges();
+    Display::Instance().applyChanges();
 }
