@@ -16,7 +16,15 @@ void setup() {
 
     Display::Instance().clearPixels(0, SCREEN_HEIGHT);
     Display::Instance().printBasicInfo(ServerManager::Instance().getCurrentIP(), 80);
-    ServerManager::Instance().launchCaptivePortal();
+
+    if (Storage::Instance().containsCredentials()) {
+        ServerManager::Instance().setWifiCredentials(Storage::Instance().getSSID(), Storage::Instance().getPassword());
+        ServerManager::Instance().connectToWifi();
+    }
+
+    if (!ServerManager::Instance().isConnected()) { // Only execute captive when is not connected
+        ServerManager::Instance().launchCaptivePortal();
+    }
 }
 
 void loop() {

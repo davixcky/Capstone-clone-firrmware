@@ -19,6 +19,13 @@ class ServerManager {
 public:
     ServerManager();
 
+    virtual ~ServerManager();
+
+    void launchCaptivePortal();
+    void setupSoftAP();
+    void tick();
+    void connectToWifi();
+
     boolean isConnected() const {
         return _isConnected;
     }
@@ -32,8 +39,14 @@ public:
         return instance;
     }
 
+    void setWifiCredentials(const char *ssid, const char *password) {
+        strcpy(_ssid, ssid);
+        strcpy(_password, password);
+    }
+
 private:
     AsyncWebServer *server;
+    DNSServer dnsServer;
 
     bool _connectWifi = false;
     bool _keepTrying = false;
@@ -42,17 +55,6 @@ private:
     char _password[MAX_PASSWORD_LENGTH];
     char _deviceName[MAX_DEVICE_NAME_LENGTH];
     bool _isConnected, _isRunningCaptive;
-public:
-    virtual ~ServerManager();
-
-    void launchCaptivePortal();
-
-    DNSServer dnsServer;
-
-    void setupSoftAP();
-    void tick();
-
-    void connectToWifi();
 };
 
 

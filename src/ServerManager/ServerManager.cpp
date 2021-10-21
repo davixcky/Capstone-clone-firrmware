@@ -62,6 +62,9 @@ void ServerManager::connectToWifi() {
         return;
     }
 
+    Storage::Instance().setNewCredentials(_ssid, _password);
+    Storage::Instance().saveWifiCredentials();
+
     strncpy(currentText, "Connected", 10);
     Display::Instance().printScene(currentText, 10);
 

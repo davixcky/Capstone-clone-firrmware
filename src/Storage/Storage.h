@@ -3,11 +3,11 @@
 
 #include "globals.h"
 
-#include "Utils/Strings.h"
-
 #include <Arduino.h>
 #include <FS.h>
 #include <SD.h>
+
+#include <Display/Display.h>
 
 class Storage {
 public:
@@ -18,6 +18,14 @@ public:
     void printCurrentCredentials();
 
     boolean containsCredentials();
+
+    char *getSSID() {
+        return _wifi_ssid;
+    }
+
+    char *getPassword() {
+        return _wifi_password;
+    }
 
     static Storage &Instance() {
         static Storage instance;
