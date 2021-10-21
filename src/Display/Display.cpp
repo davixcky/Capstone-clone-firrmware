@@ -37,11 +37,6 @@ void Display::printImage(const uint8_t *bitmap, const short width, const short h
     this->display->display();
 }
 
-void Display::setNumberScenes(int totalScenes) {
-    this->maxScenes = totalScenes;
-    this->currentIndexScene = 0;
-}
-
 void Display::printScene(char *sceneValue, uint8_t length) {
     if (!this->display) {
         Serial.println("Display has not been created");
@@ -69,42 +64,8 @@ void Display::printScene(char *sceneValue, uint8_t length) {
     if (i == stop) {
         this->display->println(F("..."));
     }
-}
 
-void Display::printCurrentScene(String *scenesValues, bool showTitle = true) {
-    if (!this->display) {
-        Serial.println("Display has not been created");
-        return;
-    }
-
-    this->clearPixels(12);
-    this->display->setTextColor(SSD1306_WHITE);
-    this->display->setTextSize(1);
-    this->display->setCursor(4, 5);
-    if (this->titlesScenes && showTitle) {
-        this->display->println(this->titlesScenes[this->currentIndexScene]);
-    }
-
-    this->display->setCursor(8, 15);
-    this->display->setTextColor(SSD1306_WHITE);
-    this->display->setTextSize(2);
-    this->display->print(scenesValues[this->currentIndexScene]);
-
-    this->display->setTextSize(1);
-    this->display->print(" " + suffixesScenes[this->currentIndexScene]);
-
-    if (++this->currentIndexScene >= this->maxScenes) {
-        this->currentIndexScene = 0;
-    }
-}
-
-void Display::setScenesTitles(String *titles) {
-    this->titlesScenes = titles;
-    Serial.println(titles[0]);
-}
-
-void Display::setScenesSuffix(String *suffixes) {
-    this->suffixesScenes = suffixes;
+    this->display->display();
 }
 
 void Display::printBasicInfo(const char *text, short batteryLevelPercent) {
@@ -123,9 +84,6 @@ void Display::printBasicInfo(const char *text, short batteryLevelPercent) {
     this->drawBatteryIndicator(batteryLevelPercent);
 
     this->display->drawFastHLine(0, h + 2, SCREEN_WIDTH, SSD1306_WHITE);
-}
-
-void Display::applyChanges() {
     this->display->display();
 }
 

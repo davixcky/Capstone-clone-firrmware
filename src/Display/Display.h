@@ -155,12 +155,7 @@ public:
 
     void begin();
     void printImage(const uint8_t bitmap[], const short width, const short height);
-    void setNumberScenes(int totalScenes);
-    void setScenesTitles(String titles[]);
-    void setScenesSuffix(String suffix[]);
-    void printCurrentScene(String scenesValues[], bool showTitle);
     void clearPixels(uint16_t startY, uint16_t stopY = SCREEN_WIDTH);
-    void applyChanges();
     void printBasicInfo(const char *text, short batteryLevelPercent);
     void printScene(char *sceneValue, uint8_t length);
 
@@ -171,10 +166,6 @@ public:
 
 private:
     Adafruit_SSD1306 *display = nullptr;
-    int maxScenes;
-    int currentIndexScene;
-    String *titlesScenes = nullptr;
-    String *suffixesScenes = nullptr;
     char previousScene[30];
 
     void drawBatteryIndicator(short percent);
