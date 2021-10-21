@@ -1,4 +1,3 @@
-#include <Storage/Storage.h>
 #include "ServerManager.h"
 
 ServerManager::ServerManager() {
@@ -28,10 +27,15 @@ void ServerManager::connectToWifi() {
     _keepTrying = true;
     _connectWifi = false;
 
+    char currentText[] = {"Connecting"};
+
     if (_isRunningCaptive) {
         _isRunningCaptive = false;
     }
     Serial.println("connecting wifi");
+    Display::Instance().printScene(currentText, 10);
+
+    delay(1000);
 
     WiFi.mode(WIFI_MODE_STA);
     WiFi.disconnect();
@@ -41,16 +45,25 @@ void ServerManager::connectToWifi() {
         _keepTrying = false;
     }, SYSTEM_EVENT_STA_DISCONNECTED);
 
+    uint8_t i = 0;
     Serial.println("TRYING wifi");
     while (WiFi.status() != WL_CONNECTED && _keepTrying) {
+        currentText[i++] = '.';
+        currentText[i] = '\0';
+
+        if (i + 1 == 11) i = 0;
+
+        Display::Instance().printScene(currentText, 10);
         delay(1000);
     }
 
-    Serial.println("checking if connected");
     if (WiFi.status() != WL_CONNECTED || !_keepTrying) {
         launchCaptivePortal(); // Launch again captive if esp cannot connect
         return;
     }
+
+    strncpy(currentText, "Connected", 10);
+    Display::Instance().printScene(currentText, 10);
 
     _isConnected = true;
     strncpy(_localIp, _ssid, 30);
@@ -70,6 +83,9 @@ void ServerManager::setupSoftAP() {
 }
 
 void ServerManager::launchCaptivePortal() {
+    char scenesBuffer[] = "Setting up";
+    Display::Instance().printScene(scenesBuffer, 10);
+
     setupSoftAP();
 
     // Setup routes

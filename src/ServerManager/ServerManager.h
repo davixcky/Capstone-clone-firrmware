@@ -11,6 +11,9 @@
 #include <DNSServer.h>
 
 #include "CaptiveRequestHandler.h"
+#include <Storage/Storage.h>
+#include <Display/Display.h>
+
 
 class ServerManager {
 public:
