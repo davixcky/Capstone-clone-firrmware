@@ -15,7 +15,7 @@ void setup() {
     delay(3000);
 
     Display::Instance().clearPixels(0, SCREEN_HEIGHT);
-    Display::Instance().printBasicInfo(ServerManager::Instance().getCurrentIP(), 80);
+    Display::Instance().printBasicInfo("Connecting", 80);
 
     if (Storage::Instance().containsCredentials()) {
         ServerManager::Instance().setWifiCredentials(Storage::Instance().getSSID(), Storage::Instance().getPassword());

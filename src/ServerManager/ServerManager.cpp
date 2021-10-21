@@ -38,7 +38,6 @@ void ServerManager::connectToWifi() {
     delay(1000);
 
     WiFi.mode(WIFI_MODE_STA);
-    WiFi.disconnect();
     WiFi.begin(_ssid, _password);
 
     WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info) {
@@ -69,7 +68,8 @@ void ServerManager::connectToWifi() {
     Display::Instance().printScene(currentText, 10);
 
     _isConnected = true;
-    strncpy(_localIp, _ssid, 30);
+    IPAddress IP = WiFi.localIP();
+    strncpy(_localIp, IP.toString().c_str(), 20);
 
     Serial.println(_localIp);
 }
@@ -138,6 +138,8 @@ void ServerManager::launchCaptivePortal() {
 
         server->end();
         server->reset();
+
+        WiFi.disconnect();
 
         _connectWifi = true;
 
