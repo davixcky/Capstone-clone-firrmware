@@ -29,14 +29,12 @@ void loop() {
     //                                                                      password works -> saved
     //                                                                      password doesn't works -> try again
 
-    ServerManager::Instance().tick();
-
-    if (ServerManager::Instance().isRunningCaptive()) {
-        display.printBasicInfo(ServerManager::Instance().getCurrentIP(), 80);
+    if (!ServerManager::Instance().isConnected()) { // Only execute tick when is not connected
+        ServerManager::Instance().tick();
     }
 
+    display.printBasicInfo(ServerManager::Instance().getCurrentIP(), 80);
     display.printScene(scenesBuffer, lengthBuffer);
 
     display.applyChanges();
-    delay(300);
 }
