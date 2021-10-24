@@ -155,9 +155,10 @@ public:
 
     void begin();
     void printImage(const uint8_t bitmap[], const short width, const short height);
-    void clearPixels(uint16_t startY, uint16_t stopY = SCREEN_WIDTH);
+    void clearPixels(uint16_t startY, uint16_t stopY = SCREEN_HEIGHT);
     void printBasicInfo(const char *text, short batteryLevelPercent);
-    void printScene(char *sceneValue, uint8_t length);
+
+    void printScene(const char *sceneValue, uint8_t length);
 
     static Display &Instance() {
         static Display instance;

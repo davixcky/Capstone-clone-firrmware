@@ -37,7 +37,7 @@ void Display::printImage(const uint8_t *bitmap, const short width, const short h
     this->display->display();
 }
 
-void Display::printScene(char *sceneValue, uint8_t length) {
+void Display::printScene(const char *sceneValue, uint8_t length) {
     if (!this->display) {
         Serial.println("Display has not been created");
         return;

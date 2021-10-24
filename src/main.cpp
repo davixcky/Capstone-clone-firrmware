@@ -4,6 +4,16 @@
 #include "globals.h"
 #include "Storage/Storage.h"
 #include "Display/Display.h"
+#include "ServerManager/DataController.h"
+
+TaskHandle_t TaskHandle_1;
+
+void tickDataSensors(void *_) {
+    if (!ServerManager::Instance().isConnected())
+        return;
+
+    DataController::Instance().tick();
+}
 
 void setup() {
     Serial.begin(115200);
@@ -25,6 +35,8 @@ void setup() {
     if (!ServerManager::Instance().isConnected()) { // Only execute captive when is not connected
         ServerManager::Instance().launchCaptivePortal();
     }
+
+    xTaskCreate(tickDataSensors, "TickDataSensors", 1000, NULL, 1, &TaskHandle_1);
 }
 
 void loop() {
@@ -36,6 +48,8 @@ void loop() {
 
     if (!ServerManager::Instance().isConnected()) { // Only execute tick when is not connected
         ServerManager::Instance().tick();
+    } else {
+        DataController::Instance().tick();
     }
 
     Display::Instance().printBasicInfo(ServerManager::Instance().getCurrentIP(), 80);
