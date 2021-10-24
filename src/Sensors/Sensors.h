@@ -1,29 +1,33 @@
 #ifndef SENSORS__H
 #define SENSORS__H
 
+#include "globals.h"
+
 #include <Arduino.h>
 #include <DHT.h>
 
-#define DHTTYPE DHT11
-
 class Sensors {
-    public:
-        explicit Sensors(int dhtPin);
+public:
+    Sensors();
 
-        void begin();
+    static Sensors &Instance() {
+        static Sensors instance;
+        return instance;
+    }
 
-        String getCurrentTemperature();
-        String getCurrentHumidity();
-        void calculateSensorsValues();
+    void begin();
+    char *getCurrentTemperature();
+    char *getCurrentHumidity();
+    void calculateSensorsValues();
 
-    private:
-        String lastTemperature;
-        String lastHumidity;
+private:
+    char lastTemperature[MAX_SENSORS_LENGTH];
+    char lastHumidity[MAX_SENSORS_LENGTH];
 
-        DHT *dht = nullptr;
+    DHT *dht = nullptr;
 
-        void calculateTemperature();
-        void calculateHumidity();
+    void calculateTemperature();
+    void calculateHumidity();
 };
 
 #endif // SENSORS__H
