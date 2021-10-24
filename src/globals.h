@@ -17,4 +17,17 @@
 #define MAX_PASSWORD_LENGTH 30
 #define MAX_DEVICE_NAME_LENGTH 20
 
+// Sensors
+#define SENSORS_DHT_PIN 32
+#define SENSORS_DHT_TYPE DHT11
+
+// Data controller
+#define MAX_BUCKET_ID_LENGTH 20
+#define MAX_TOKEN_BUCKET_LENGTH 20
+#define MAX_SENSORS_LENGTH 30
+
+static const char *UNDEFINED_VALUE_TEXT =  "n/a";
+static const char *RUNNING_TEXT = "Running";
+static const char *END_TEXT = "Waiting";
+
 #endif // GLOBALS__H
