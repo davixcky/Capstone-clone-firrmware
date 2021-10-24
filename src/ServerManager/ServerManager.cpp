@@ -27,7 +27,7 @@ void ServerManager::connectToWifi() {
     _keepTrying = true;
     _connectWifi = false;
 
-    char currentText[] = {"Connecting"};
+    char currentText[15] = {"Connecting"};
 
     if (_isRunningCaptive) {
         _isRunningCaptive = false;
@@ -72,6 +72,7 @@ void ServerManager::connectToWifi() {
     strncpy(_localIp, IP.toString().c_str(), 20);
 
     Serial.println(_localIp);
+    setPublicAPI();
 }
 
 void ServerManager::setupSoftAP() {
@@ -83,6 +84,8 @@ void ServerManager::setupSoftAP() {
     Serial.println(F(_localIp));
 
     _isRunningCaptive = true;
+    server->reset();
+    server->end();
 }
 
 void ServerManager::launchCaptivePortal() {
@@ -167,4 +170,41 @@ void ServerManager::tick() {
     if (_connectWifi) {
         connectToWifi();
     }
+}
+
+void ServerManager::setPublicAPI() {
+    server->on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        Serial.println("Calling /");
+
+        request->send(200, "application/json", "{json: true}");
+    });
+
+    server->on("/start", HTTP_GET, [](AsyncWebServerRequest *request) {
+        Serial.println("Calling /start");
+
+        // The delay and numberRegister is already filter by the server
+        const char *delay = request->getParam("delay")->value().c_str();
+        const char *numberRegisters = request->getParam("number_registers")->value().c_str();
+        const char *bucketID = request->getParam("bucket_id")->value().c_str();
+        const char *token = request->getParam("token")->value().c_str();
+
+        bool result = DataController::Instance().setNewDataSender(bucketID, token, atoi(delay), atoi(numberRegisters));
+        if (result)
+            request->send(200, "application/json", "{start: true}");
+        else
+            request->send(200, "application/json", "{start: false}");
+    });
+
+    server->on("/cancel", HTTP_GET, [](AsyncWebServerRequest *request) {
+        Serial.println("Calling /cancel");
+
+        bool result = DataController::Instance().stopController();
+        if (result)
+            request->send(200, "application/json", "{stop: true}");
+        else
+            request->send(200, "application/json", "{stop: false}");
+    });
+
+    server->begin();
+    Serial.println("Server started");
 }

@@ -1,7 +1,7 @@
 #ifndef SERVER__H
 #define SERVER__H
 
-#include "../globals.h"
+#include "globals.h"
 
 #include <Arduino.h>
 #include <AsyncTCP.h>
@@ -11,9 +11,9 @@
 #include <DNSServer.h>
 
 #include "CaptiveRequestHandler.h"
-#include <Storage/Storage.h>
-#include <Display/Display.h>
-
+#include "DataController.h"
+#include "Storage/Storage.h"
+#include "Display/Display.h"
 
 class ServerManager {
 public:
@@ -31,6 +31,8 @@ public:
     }
 
     char *getCurrentIP() {
+        IPAddress IP = WiFi.localIP();
+        strncpy(_localIp, IP.toString().c_str(), 20);
         return _localIp;
     }
 
@@ -55,6 +57,8 @@ private:
     char _password[MAX_PASSWORD_LENGTH];
     char _deviceName[MAX_DEVICE_NAME_LENGTH];
     bool _isConnected, _isRunningCaptive;
+
+    void setPublicAPI();
 };
 
 
